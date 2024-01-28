@@ -1,0 +1,9 @@
+django-ninja
+Django
+ipython
+pytest
+pytest-django
+ruff
+model-bakery
+uvicorn
+psycopg

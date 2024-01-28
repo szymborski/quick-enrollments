@@ -1,0 +1,21 @@
+# production docker compose
+version: "3.4"
+
+services:
+  postgres:
+    image: postgres:15
+    ports:
+      - "${POSTGRES_DEV_PORT:-6004}:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./volumes/postgres/:/var/lib/postgresql/data/
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data: {}
