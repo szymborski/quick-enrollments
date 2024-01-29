@@ -10,10 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = environ.Path(__file__) - 2
+
+env = environ.Env()
+env.read_env(str(BASE_DIR.path(".env")))
 
 
 # Quick-start development settings - unsuitable for production
@@ -23,9 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-o(vmf1!y1ps2rjmz#wpgx44pwv5#bg&x&fcj^r(#9$f^j6m!1x"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["0.0.0.0", "localhost", "127.0.0.1"]
+
+USE_DEBUG_TOOLBAR = env.bool("USE_DEBUG_TOOLBAR", default=False)
 
 # Application definition
 
@@ -40,6 +46,11 @@ INSTALLED_APPS = [
     "enrollments",
 ]
 
+if USE_DEBUG_TOOLBAR:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+    ]
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -48,9 +59,16 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
-ROOT_URLCONF = "usos.urls"
+
+if USE_DEBUG_TOOLBAR:
+    INTERNAL_IPS = [
+        "127.0.0.1",
+    ]
+
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
@@ -68,20 +86,27 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "usos.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',  # Set to your Docker container's IP if different
-        'PORT': '5432',
+DATABASES = {"default": env.db("DATABASE_URL")}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"  # Use the 'default' cache alias defined earlier
+
+# Cache
+# https://docs.djangoproject.com/en/5.0/topics/cache/
+CACHE_URL = env("REDIS_URL")
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CACHE_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
     }
 }
 

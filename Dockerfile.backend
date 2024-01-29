@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /code/backend/
+
+# Install uwsgi
+RUN pip install uvicorn
+
+# Install python requirements
+COPY requirements* ./
+RUN pip install -r requirements.txt
+
+# Copy Django code
+COPY . .

@@ -1,9 +1,7 @@
-django-ninja
-Django
-ipython
-pytest
+-r requirements-production.txt
+pytest<8
 pytest-django
 ruff
 model-bakery
-uvicorn
-psycopg
+pytest-asyncio
+django-debug-toolbar

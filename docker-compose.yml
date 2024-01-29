@@ -1,0 +1,47 @@
+# production docker compose
+version: "3.4"
+
+services:
+  backend:
+    build:
+      context: ./backend/
+      dockerfile: ../Dockerfile
+    restart: always
+    volumes:
+      - ./volumes/static:/var/static/
+    env_file:
+      - ./backend/.env
+    environment:
+      STATIC_ROOT: /var/static
+    depends_on:
+      - postgres
+      - redis
+    command:
+      bash -c "python manage.py migrate && python manage.py collectstatic --noinput
+      && uvicorn usos.asgi:application --host 0.0.0.0 --port 80 --workers ${WORKERS:-1}
+    networks:
+      - backend-network
+      - nginx-proxy
+    expose:
+      - "80"
+
+  postgres:
+    image: postgres:15
+    env_file:
+      - .postgres.env
+    networks:
+      - backend-network
+    restart: always
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data/
+
+  redis:
+    image: redis
+    restart: always
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+  nginx-proxy:
+    external: true
