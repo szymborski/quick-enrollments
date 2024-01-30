@@ -6,8 +6,8 @@ WORKDIR /code/backend/
 RUN pip install uvicorn
 
 # Install python requirements
-COPY requirements* ./
-RUN pip install -r requirements.txt
+COPY requirements* .
+RUN pip install -r requirements-production.txt
 
 # Copy Django code
 COPY . .

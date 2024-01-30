@@ -1,0 +1,7 @@
+django-ninja
+Django
+ipython
+django-environ==0.11.2
+psycopg2-binary
+py-redis
+django-redis

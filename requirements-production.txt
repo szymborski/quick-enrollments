@@ -1,4 +1,0 @@
-django-ninja
-Django
-ipython
-django-environ==0.12.2
