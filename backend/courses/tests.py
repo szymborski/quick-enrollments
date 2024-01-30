@@ -18,3 +18,14 @@ def test_courses_list(client, list_url, django_assert_max_num_queries):
         response = client.get(list_url)
         assert response.status_code == 200
         assert len(response.json()[0]["enrolled_students"]) == 2
+
+
+async def test_add_course(async_client, list_url):
+    payload = {
+        "name": "Test Course",
+        "max_students": 2,
+    }
+    response = await async_client.post(list_url, payload, content_type="application/json")
+
+    assert response.status_code == 200
+    assert await Course.objects.aget()

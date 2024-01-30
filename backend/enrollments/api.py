@@ -11,8 +11,7 @@ api = NinjaAPI(urls_namespace="enrollments")
 
 @api.post("/enroll/", response=CourseEnrollmentOut)
 async def enroll(request, input_data: CourseEnrollmentIn):
-    is_valid = await can_enroll_db(input_data.course_id)
-    if is_valid:
+    if await can_enroll_db(input_data.course_id):
         await enroll_to_course_db(input_data.course_id, input_data.student_name)
         success = True
     else:
@@ -22,18 +21,15 @@ async def enroll(request, input_data: CourseEnrollmentIn):
 
 @api.post("/enroll-cache/", response=CourseEnrollmentOut)
 async def enroll_cache(request, input_data: CourseEnrollmentIn):
-    pool = redis.ConnectionPool.from_url(settings.CACHE_URL)
-    client = redis.Redis(connection_pool=pool)
+    redis_client = await redis.from_url(settings.CACHE_URL)
 
     course_id = input_data.course_id
-    async with client.lock(f"enroll_{course_id}"):
-        is_valid = await can_enroll_cache(course_id)
-        if is_valid:
+    async with redis_client.lock(f"enroll_{course_id}"):
+        if await can_enroll_cache(course_id):
             await enroll_to_course_cache(input_data.course_id, input_data.student_name)
             success = True
         else:
             success = False
 
-        await client.aclose()
-        await pool.aclose()
+        await redis_client.aclose()
         return {"success": success}

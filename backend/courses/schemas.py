@@ -3,6 +3,11 @@ from typing import List
 from ninja import Schema
 
 
+class CourseIn(Schema):
+    name: str
+    max_students: int
+
+
 class CourseOut(Schema):
     id: int
     name: str

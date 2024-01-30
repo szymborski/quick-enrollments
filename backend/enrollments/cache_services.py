@@ -22,20 +22,15 @@ async def can_enroll_cache(course_id):
             max_key,
         ]
     )
-    try:
-        enrolled_count = data[count_key]
-        max_students = data[max_key]
-    except KeyError:
-        data = await sync_db_to_cache(course_id=course_id)
-        enrolled_count = data[count_key]
-        max_students = data[max_key]
+    enrolled_count = data[count_key]
+    max_students = data[max_key]
 
     return enrolled_count < max_students
 
 
 async def enroll_to_course_cache(course_id, student_name):
-    r = await redis.from_url(settings.CACHE_URL)
-    async with r.pipeline(transaction=True) as pipe:
+    redis_client = await redis.from_url(settings.CACHE_URL)
+    async with redis_client.pipeline(transaction=True) as pipe:
         await (
             pipe.lpush(
                 get_enrolled_students_to_course_key(course_id, add_prefix=True),
@@ -46,15 +41,13 @@ async def enroll_to_course_cache(course_id, student_name):
         )
 
 
-async def sync_db_to_cache(course_id=None):
+async def sync_db_to_cache():
     courses = [
         course
         async for course in Course.objects.annotate(
             enrolled_students=Count("enrollments")
         ).all()
     ]
-    if course_id:
-        courses = [course for course in courses if course.id == course_id]
 
     to_set = {}
     for course in courses:
@@ -77,19 +70,19 @@ async def pop_student_from_course(client, course_id):
 
 
 async def sync_cache_to_db():
-    r = await redis.from_url(settings.CACHE_URL)
+    redis_client = await redis.from_url(settings.CACHE_URL)
 
     courses = [course async for course in Course.objects.all()]
 
     to_create = []
 
     for course in courses:
-        student = await pop_student_from_course(r, course.id)
+        student = await pop_student_from_course(redis_client, course.id)
         while student:
             to_create.append(
                 CourseEnrollment(course_id=course.id, student_name=student)
             )
-            student = await pop_student_from_course(r, course.id)
+            student = await pop_student_from_course(redis_client, course.id)
 
     if to_create:
         await CourseEnrollment.objects.abulk_create(to_create)
