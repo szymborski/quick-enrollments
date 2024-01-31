@@ -11,11 +11,15 @@ api = NinjaAPI(urls_namespace="enrollments")
 
 @api.post("/enroll/", response=CourseEnrollmentOut)
 async def enroll(request, input_data: CourseEnrollmentIn):
-    if await can_enroll_db(input_data.course_id):
-        await enroll_to_course_db(input_data.course_id, input_data.student_name)
-        success = True
-    else:
-        success = False
+    redis_client = await redis.from_url(settings.CACHE_URL)
+    course_id = input_data.course_id
+
+    async with redis_client.lock(f"enroll_{course_id}"):
+        if await can_enroll_db(input_data.course_id):
+            await enroll_to_course_db(course_id, input_data.student_name)
+            success = True
+        else:
+            success = False
     return {"success": success}
 
 
