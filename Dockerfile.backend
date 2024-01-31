@@ -2,11 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /code/backend/
 
-# Install uwsgi
-RUN pip install uvicorn
+# Install uvicorn
+RUN pip install --upgrade pip && pip install uvicorn
 
 # Install python requirements
-COPY requirements* .
+COPY requirements* ./
 RUN pip install -r requirements-production.txt
 
 # Copy Django code

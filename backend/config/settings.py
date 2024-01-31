@@ -27,9 +27,11 @@ env.read_env(str(BASE_DIR.path(".env")))
 SECRET_KEY = "django-insecure-o(vmf1!y1ps2rjmz#wpgx44pwv5#bg&x&fcj^r(#9$f^j6m!1x"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ["0.0.0.0", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[
+    "0.0.0.0", "localhost", "127.0.0.1"
+])
 
 USE_DEBUG_TOOLBAR = env.bool("USE_DEBUG_TOOLBAR", default=False)
 
